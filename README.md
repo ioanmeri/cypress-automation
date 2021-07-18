@@ -423,8 +423,8 @@ Set up project
 node_modules/.bin/cypress run --record --key the-key
 
 
-Integrate Mochawesome reports
------------------------------
+Mochawesome reports
+-------------------
 
 ```
 npm install --save-dev mocha mochawesome
@@ -434,7 +434,7 @@ In ```cypress.json```
 ```
 {
   ...,
- "reporter": "mochaawesome"
+ "reporter": "mochawesome"
 }
 ```
 
@@ -443,3 +443,64 @@ Generate mochawesome report for one spec
 ```
 node_modules/.bin/cypress run --reporter mochawesome --spec cypress/integration/examples/TestFramework.js
 ```
+
+Npm Scripts
+------------
+
+```package.json```
+
+```
+{
+  ...,
+  "scripts": {
+    "test": "node_modules\\.bin\\cypress run",
+    "headTest": "npm run test -- --headed",
+    "chromeTest": "npm run test -- --browser chrome",
+        "recordDashboardTest": "npm run test -- --record --key the-key --reporter mochawesome",
+    "GreenKartTest": "npm run test -- --spec \"cypress/integration/GreenKart/*\""
+
+  },
+}
+```
+
+add **--parallel** flag to push to multiple jenkins slave servers for different envs (dev, qa, stage)
+
+XHR Requests
+------------
+
+**Stub response**: Overwrite the API's response with custom options
+
+```
+cy.server()
+
+cy.route({
+  method: 'PUT',
+  url: 'comments/*',
+  status: 404,
+  response: { error: message },
+  delay: 500
+}).as('putContent')
+
+cy.get('.network-pup').click()
+
+cy.wait('@putContent')
+
+cy.get('.network-put-comment').should('contain', message)
+```
+
+API Call
+--------
+
+```
+cy.request('POST', 'https://216.10.245.166/library/Addbook.php', {
+  "name": "Learn Appium Automation with Java",
+  "isbn": "bcdsss",
+  "aisle": "22s7",
+  "author": "John foe:
+}).then(function(response){
+    expect(response.status).to.eq(200)
+    expect(response.body).to.have.property("Msg", "successfully added")
+})
+```
+
+cy.route just listens to the response and is able to stub but cy.request send the actual request to server
