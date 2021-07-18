@@ -1,4 +1,4 @@
-
+# Cypress Modern Automation
 
 
 ## Install
@@ -178,7 +178,7 @@ cy.url().should('include', 'top')
 
 Child windows
 -------------
-2nd way, works on links with same domain ONLY 
+2nd way, works on links with same domain ONLY
 
 - Get the url before you navigate, href attribute
 - visit url
@@ -219,3 +219,227 @@ come from Mocha
 conditions to run before / after / beforeEach / afterEach test
 
 
+Property Validation
+-------------------
+// only validate if attr have a certain value
+```
+cy.get('input[name="name"]:nth-child(2)')
+  .should('have.attr', 'minlength', '2')
+```
+
+
+Cypress Commands
+----------------
+Write a function that takes product name and click Add Button
+
+Iterate through common selector and find title
+
+
+Create new command: ```support/commands.js```
+
+```
+Cypress.Commands.add('selectProduct', (productName) => {
+  cy.get('h4.card-title').each(($el, index, $list) => {
+    if($el.text().includes(productName)){
+      cy.get('button.btn.btn-info').eq(index).click()
+    }
+  })
+})
+```
+
+and use command in integration test:
+```
+cy.selectProduct('Blackberry')
+```
+
+Loop through JSON fixtures
+--------------------------
+```
+{
+  "productName": ['Blackberry', 'Nokia Edge']
+}
+```
+
+```
+this.data.productName.forEach(function(el){
+  cy.selectProduct(el)
+})
+```
+
+Test Debugging
+--------------
+Pause test and inspect at runtime
+
+```
+cy.pause()
+
+// or
+cy.get(':nth-child(2) > .nav-link').click().debug()
+```
+
+Page Object Design Pattern
+--------------------------
+
+We collect cases from one specific place and write tests in one class
+
+```cypress/integration/pageObjects/HomePage```
+
+```
+class HomePage {
+
+  getEditBox(){
+    return cy.get('input[name="name"]:nth-child(2)')
+  }
+
+  getTwoWayDataBinding(){
+    return cy.get(':nth-child(4) > .ng-untouched')
+  }
+
+  getGender(){
+    return cy.get('select')
+  }
+
+  getEnterpreneaur(){
+    return cy.get('#inlineRadio3')
+  }
+
+  getShopTab(){
+    return cy.get((':nth-child(2) > .nav-link'))
+  }
+}
+
+export default HomePage
+```
+
+in Test:
+```
+import HomePage from '../pageObjects/HomePage'
+
+...
+
+const homePage = new HomePage()
+
+homePage.getEditBox().type(this.data.name)
+```
+
+Global Configs
+--------------
+```cypress.json``
+```
+All Cypress Configs can be found in Test Runner > CypressJs > Settings.
+
+Settings can be overwritten from ```cypress.json``` file
+
+{
+  "defaultCommandTimeout": 8000,
+  "pageLoadTimeout": 10000
+}
+
+```
+
+and overwritten per spec file.
+
+Explicit wait mechanism:
+```
+Cypress.config('defaultCommandTimeout', 8000)
+cy.get('elem').click()
+// until the end of test
+```
+
+**Partial text comparison**
+```
+cy.get('.alert ').then(function(element){
+  const actualText = element.text()
+  expect(actualText.includes("Success!")).to.be.true
+})
+```
+
+
+Sum of Numbers
+--------------
+Although Cypress will wait for it's commands to finish before executing the next one, JavaScript is a asynchronous.
+
+That means that we need to promisify Cypress methods before using js
+```
+let sum = 0
+
+cy.get('tr td:nth-child(4) strong').each(($el, index, $list) => {
+  const amount = $el.text()
+  let res = amount.split(" ")
+  res = res[1].trim()
+  sum +=  Number(res)
+}).then(function(){
+  cy.log(sum)
+})
+
+cy.get('h3 strong').then(function(element){
+  const amount = element.text()
+  let res = amount.split(" ")
+  let total = res[1].trim()
+  expect(Number(total)).to.equal(sum)
+})
+```
+
+Environmental Variables
+-----------------------
+```cypress.json```
+
+```
+{
+  "defaultCommandTimeout": 8000,
+  "pageLoadTimeout": 10000,
+  "env": {
+    "url": "https://rahulshettyacademy.com/angularpractice/"
+  }
+}
+```
+
+
+```
+cy.visit(Cypress.env('url'))
+```
+
+Test Only One File AND add Env
+-------------------------------
+```
+$ node_modules/.bin/cypress run --spec cypress/integration/examples/TestFramework.js --env url=website.com --headed
+```
+
+**Env at Runtime**
+command line --env takes priority, overwrites cypress.json env variables
+
+On Failure, Cypress automatically takes screenshots and stores them.
+
+Dashboard
+---------
+
+Dashboard > Runs > Login with Github
+
+Set up project
+
+1) Insert ProjectID into your cypress.json file
+
+2) Run cypress while passing the record key
+node_modules/.bin/cypress run --record --key the-key
+
+
+Integrate Mochawesome reports
+-----------------------------
+
+```
+npm install --save-dev mocha mochawesome
+```
+
+In ```cypress.json```
+```
+{
+  ...,
+ "reporter": "mochaawesome"
+}
+```
+
+Generate mochawesome report for one spec
+
+```
+node_modules/.bin/cypress run --reporter mochawesome --spec cypress/integration/examples/TestFramework.js
+```
